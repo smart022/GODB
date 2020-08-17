@@ -3,6 +3,7 @@ package physical
 import (
 	"bytes"
 	"encoding/binary"
+	"sync"
 	"fmt"
 	"os"
 )
@@ -10,7 +11,7 @@ import (
 type size_t int64
 
 const (
-	IntegerLen = 8 // 8 bytes for int64
+	INTEGER_LENGTH = 8 // 8 bytes for int64
 	//ByteDir    = binary.LittleEndian
 )
 
@@ -22,8 +23,11 @@ func check(e error) {
 
 type Storage struct {
 	_f     *os.File
+	mutex	sync.Mutex
 	Locked bool
 }
+
+// 原代码里的 lock unlock 不用实现，直接调mutex的
 
 func (s *Storage) assert_not_closed() bool {
 	if s._f == nil {
@@ -47,7 +51,7 @@ func (s *Storage) read_integer() int64 {
 	// test
 	//s._f.Seek(0, 0)
 
-	cot := make([]byte, IntegerLen)
+	cot := make([]byte, INTEGER_LENGTH)
 	_, err := s._f.Read(cot)
 	check(err)
 	buf := bytes.NewReader(cot)
@@ -59,16 +63,19 @@ func (s *Storage) read_integer() int64 {
 
 // cur pos write
 func (s *Storage) write_integer(theInt int64) error {
-	buf := new(bytes.Buffer)
+	buff := new(bytes.Buffer)
 
-	err := binary.Write(buf, binary.LittleEndian, theInt)
+	err := binary.Write(buff, binary.LittleEndian, theInt)
 	if err != nil {
+		
+		fmt.Println("binary.Write failed:", err)
 		return err
 	}
 
 	//buf.WriteTo(s._f)
-	_, err = s._f.Write(buf.Bytes())
+	_, err = s._f.Write(buff.Bytes())
 	if err != nil {
+		fmt.Println("file Write failed:", err)
 		return err
 	}
 
@@ -92,7 +99,12 @@ func (s *Storage) read(address int64) []byte {
 //
 func (s *Storage) write(data []byte) int64 {
 	// lock()
-	pos, err := s._f.Seek(0, 2)
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	// Seek(0,1) current pos
+	// 0,1,2: head,curr,tail
+	pos, err := s._f.Seek(0, 1)
+
 	check(err)
 	datalen := int64(len(data))
 	s.write_integer(datalen)
@@ -103,6 +115,9 @@ func (s *Storage) write(data []byte) int64 {
 
 func (s *Storage) commit_root_address(root_address int64) {
 	// lock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
 	s._f.Sync()
 	// seek_superblock
 	s._f.Seek(0, 0)
@@ -121,13 +136,11 @@ func (s *Storage) get_root_address() int64 {
 }
 
 func (s *Storage) close() {
-	// unlock()
 	s._f.Close()
 }
 
 func NewStorage(f *os.File) *Storage {
 	s := new(Storage)
 	s._f = f
-	s.locked = false
 	return s
 }

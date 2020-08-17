@@ -39,8 +39,12 @@ func (t *BinaryNodeRef) address() int64 {
 	return t._address
 }
 
-func (t *BinaryNodeRef) prepare_to_store() {
-	// to do
+// 注意  prepare_to_store 和 ref . store 的交互调用
+// 保证了树的递归存储
+func (t *BinaryNodeRef) prepare_to_store(st *physical.Storage) {
+	if t._referent!=nil{
+		t._referent.store_refs(st)
+	}
 }
 
 func (t *BinaryNodeRef) get(storage *physical.Storage) (interface{},error) { //*BinaryNode
@@ -57,7 +61,7 @@ func (t *BinaryNodeRef) store(storage *physical.Storage) error {
 	
 	var err error
 	if t._referent != nil && t._address == lg.INIT_ADDR {
-		t.prepare_to_store()
+		t.prepare_to_store(storage)
 		t._address = storage.write(t.ref2bytes(t._referent))
 	}
 

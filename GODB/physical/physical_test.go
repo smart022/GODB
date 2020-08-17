@@ -8,8 +8,12 @@ import (
 func TestFunc(t *testing.T) {
 	//t.Skip()
 	//t.Errorf(os.Getwd())
-	addr := "test.txt"
-	f, _ := os.OpenFile(addr, os.O_RDWR, 0755)
+	addr := "test1.txt"
+	f, err := os.OpenFile(addr, os.O_CREATE|os.O_RDWR, 0755)
+	if err!=nil{
+		panic(err.Error())
+	}
+
 	st := NewStorage(f)
 	if st == nil {
 		t.Errorf("file open failed!")
@@ -35,23 +39,32 @@ func TestFunc(t *testing.T) {
 }
 
 func TestInteger(t *testing.T) {
-	t.Skip()
+	//t.Skip()
 	addr := "test.txt"
-	f, _ := os.OpenFile(addr, os.O_RDWR, 0755)
+	f, err := os.OpenFile(addr, os.O_CREATE|os.O_RDWR, 0755)
+	if err!=nil{
+		panic(err.Error())
+	}
+	defer f.Close()	
 	st := NewStorage(f)
 	if st == nil {
 		t.Errorf("file open failed!")
 	}
 	var num int64
 
-	num = 12
+	num = 1432
 
-	err := st.write_integer(num)
+	err = st.write_integer(num)
 	if err != nil {
-		t.Errorf("write_integer failed!")
+
+		t.Errorf("%s %s", err.Error(),"write_integer failed!")
 	}
 
 	st._f.Sync()
+
+
+	// reopen
+
 	st._f.Seek(0, 0)
 	ret := st.read_integer()
 	if ret != num {

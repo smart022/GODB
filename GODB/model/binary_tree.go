@@ -33,6 +33,12 @@ const (
 	NULLREF lg.Ref = nil
 )
 
+func (node *BinaryNode)store_refs(st *physical.Storage){
+	node.left_ref.store(st)
+	node.right_ref.store(st)
+	node.value_ref.store(st)
+}
+
 //
 func NewNode(l, r, v lg.Ref, k string, len int) *BinaryNode {
 	return &BinaryNode{l, r, v, k, len}
