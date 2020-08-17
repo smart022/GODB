@@ -1,4 +1,4 @@
-package GODB
+package logical
 
 // 先虚
 type ValueRef interface {
