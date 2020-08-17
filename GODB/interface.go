@@ -3,11 +3,15 @@ package GODB
 import (
 	"log"
 	"os"
+	"./physical"
+	"./model"
+	"./logical"
+	"./implement"
 )
 
 type GODB struct {
-	storage *Storage     ``
-	model   *LogicalBase ``
+	storage *physical.Storage     ``
+	model   *logical.LogicalBase ``
 }
 
 func (db *GODB) get(key string) (string, bool) {
@@ -45,6 +49,8 @@ func NewGODB(addr string) *GODB {
 
 	// defer f.Close() 何时close?
 	db.storage = NewStorage(f)
-	db.model = NewB2Tree()
+
+	// 基础实现源 变成logicalbase_impl
+	db.model = NewLogicalBaseImpl( db.storage )
 	return db
 }

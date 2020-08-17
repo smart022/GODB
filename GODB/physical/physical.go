@@ -22,7 +22,7 @@ func check(e error) {
 
 type Storage struct {
 	_f     *os.File
-	locked bool
+	Locked bool
 }
 
 func (s *Storage) assert_not_closed() bool {

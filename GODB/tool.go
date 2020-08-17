@@ -13,6 +13,13 @@ func usage() {
 	io.WriteString(os.Stderr, "\n tool DBNAME delete KEY\n")
 }
 
+// should be const, but golang not support map type
+var VERB_SET map[string]bool = map[string]bool{
+	"get":true,
+	"set":true,
+	"delete":true,
+}
+
 func Run() {
 
 	Nargs := len(os.Args)
@@ -29,13 +36,9 @@ func Run() {
 		val = os.Args[4]
 	}
 
-	set := make(map[string]bool)
-	set["get"] = true
-	set["set"] = true
-	set["delete"] = true
 
 	// check verb valid
-	if _, ok := set[verb]; ok != true {
+	if _, ok := VERB_SET[verb]; ok != true {
 		usage()
 		return
 	}
