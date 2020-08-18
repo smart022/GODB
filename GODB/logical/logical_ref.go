@@ -12,15 +12,15 @@ import "../physical"
 */
 type Ref interface {
 
-	length() (int64,error) // _referent 的长度
-	prepare_to_store() // 查出 _address 定位
-	address() int64
+	Length() (int,error) // _referent 的长度
+	Prepare_to_store(st *physical.Storage) // 查出 _address 定位
+	Address() int64
 
 	// 基础操作
-	get(st *physical.Storage) (interface{},error)
-	store(st *physical.Storage) error
-	bytes2ref([]byte) interface{}
-	ref2bytes(interface{}) []byte // 这个ref2bytes 我才发现存的都是地址
+	Get(st *physical.Storage) (interface{},error)
+	Store(st *physical.Storage) error
+	Bytes2ref([]byte) interface{}
+	Ref2bytes(interface{}) []byte // 这个ref2bytes 我才发现存的都是地址
 }
 
 const (

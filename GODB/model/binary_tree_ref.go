@@ -4,6 +4,7 @@ import (
 	//"fmt"
 	"bytes"
 	"encoding/gob"
+	"errors"
 	"../physical"
 	lg "../logical"
 )
@@ -18,57 +19,65 @@ type BinaryNodeRef struct {
 	_address  int64
 }
 
-var _ lg.Ref = NewBNodeRef(0,nil)
+var _ lg.Ref = NewBNodeRef(0,BinaryNode{})
 
 // New
-func NewBNodeRef(addr int64, ref BinaryNode) BinaryNodeRef {
+func NewBNodeRef(addr int64, referent BinaryNode) *BinaryNodeRef {
 	
-	return BinaryNodeRef{
-		_referent:ref
-		_address: addr
+	return &BinaryNodeRef{
+		_referent:referent,
+		_address: addr,
 	}
 }
 
-var NullRef BinaryNodeRef = BinaryNodeRef{nil, init_addr}
+//var NullRef BinaryNodeRef = BinaryNodeRef{nil, init_addr}
+
+func (t *BinaryNodeRef) Address() int64 {
+	return t._address
+}
 
 func (t *BinaryNodeRef) IsNull() bool {
 	return t._address == lg.INIT_ADDR
 }
 
-func (t *BinaryNodeRef) address() int64 {
-	return t._address
+func (t *BinaryNodeRef) Length() (int,error) {
+	if t._referent.IsNull() {
+		return 0,errors.New("unloaded ref")
+	}
+
+	return int(t._referent.length), nil
 }
 
 // 注意  prepare_to_store 和 ref . store 的交互调用
 // 保证了树的递归存储
-func (t *BinaryNodeRef) prepare_to_store(st *physical.Storage) {
-	if t._referent!=nil{
+func (t *BinaryNodeRef) Prepare_to_store(st *physical.Storage) {
+	if !t._referent.IsNull() {
 		t._referent.store_refs(st)
 	}
 }
 
-func (t *BinaryNodeRef) get(storage *physical.Storage) (interface{},error) { //*BinaryNode
+func (t *BinaryNodeRef) Get(storage *physical.Storage) (interface{},error) { //*BinaryNode
 	
 	var err error
-	if t._referent == nil && t._address != lg.INIT_ADDR {
-		t._referent = (t.bytes2ref(storage.read(t._address))).(BinaryNode)
+	if t._referent.IsNull()  && t._address != lg.INIT_ADDR {
+		t._referent = (t.Bytes2ref(storage.Read(t._address))).(BinaryNode)
 	}
 
 	return t._referent,err
 }
 
-func (t *BinaryNodeRef) store(storage *physical.Storage) error {
+func (t *BinaryNodeRef) Store(storage *physical.Storage) error {
 	
 	var err error
-	if t._referent != nil && t._address == lg.INIT_ADDR {
-		t.prepare_to_store(storage)
-		t._address = storage.write(t.ref2bytes(t._referent))
+	if !t._referent.IsNull() && t._address == lg.INIT_ADDR {
+		t.Prepare_to_store(storage)
+		t._address = storage.Write(t.Ref2bytes(t._referent))
 	}
 
 	return err
 }
 
-func (t *BinaryNodeRef) bytes2ref(cot []byte) interface{} {
+func (t *BinaryNodeRef) Bytes2ref(cot []byte) interface{} {
 	var ret BinaryNodeStore
 	decoder := gob.NewDecoder(bytes.NewBuffer(cot))
 	err := decoder.Decode(&ret)
@@ -76,23 +85,23 @@ func (t *BinaryNodeRef) bytes2ref(cot []byte) interface{} {
 	panic_check(err,"[BinaryNodeRef] bytes2ref failed! Invalid bytes")
 
 	return NewNode(
-		NewBNodeRef(ret.Left, nil),
-		NewBNodeRef(ret.Right, nil),
-		NewTrueValRef(ret.Value, ""),
+		NewBNodeRef(ret.Left, NULLNODE),
+		NewBNodeRef(ret.Right, NULLNODE),
+		NewValueRef(ret.Value, ""),
 		ret.Key,
 		ret.Length)
 }
 
 
 // 这个
-func (t *BinaryNodeRef) ref2bytes(node interface{}) []byte {
+func (t *BinaryNodeRef) Ref2bytes(node interface{}) []byte {
 
 	cur := node.(BinaryNode)
 	//
 	sto := BinaryNodeStore{
-		cur.left_ref.address(),
-		cur.right_ref.address(),
-		cur.value_ref.address(),
+		cur.left_ref.Address(),
+		cur.right_ref.Address(),
+		cur.value_ref.Address(),
 		cur.key,
 		cur.length}
 
@@ -105,6 +114,8 @@ func (t *BinaryNodeRef) ref2bytes(node interface{}) []byte {
 
 	return buf.Bytes()
 }
+
+
 
 func panic_check(err error, info string){
 	if err!=nil{

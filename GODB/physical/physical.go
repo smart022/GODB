@@ -82,7 +82,7 @@ func (s *Storage) write_integer(theInt int64) error {
 	return nil
 }
 
-func (s *Storage) read(address int64) []byte {
+func (s *Storage) Read(address int64) []byte {
 	s._f.Seek(address, 0)
 	datalen := s.read_integer() // read_integer 本身也会移动
 
@@ -97,7 +97,7 @@ func (s *Storage) read(address int64) []byte {
 // data formar:
 // len of data bytes | data bytes
 //
-func (s *Storage) write(data []byte) int64 {
+func (s *Storage) Write(data []byte) int64 {
 	// lock()
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -113,7 +113,8 @@ func (s *Storage) write(data []byte) int64 {
 	return pos
 }
 
-func (s *Storage) commit_root_address(root_address int64) {
+// 从头改写更新
+func (s *Storage) Commit_root_address(root_address int64) {
 	// lock()
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -127,12 +128,12 @@ func (s *Storage) commit_root_address(root_address int64) {
 	// unlock()
 }
 
-func (s *Storage) get_root_address() int64 {
+func (s *Storage) Get_root_address() int64 {
 	// seek_superblock
 	s._f.Seek(0, 0)
-	pos := s.read_integer()
+	root_pos := s.read_integer()
 
-	return pos
+	return root_pos
 }
 
 func (s *Storage) close() {

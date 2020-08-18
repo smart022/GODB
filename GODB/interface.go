@@ -34,8 +34,12 @@ func (db *GODB) del(key string) bool {
 	return true
 }
 
-func (db *GODB) commit() bool {
-	return true
+func (db *GODB) commit()  {
+	if !db.storage.assert_not_closed() {
+		return error.New("file closed")
+	}
+	db.storage.commit_root_address(db.model.address())
+	return nil
 }
 
 func NewGODB(addr string) *GODB {

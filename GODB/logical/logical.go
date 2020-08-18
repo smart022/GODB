@@ -65,12 +65,13 @@ type LogicalBase interface {
 	// value_ref_class = ValueRef
 
 	// methods
-	commit()
-	_refresh_tree_ref() // 更新视图
-	get(string) string 
-	set(string,string)
+	Commit()
+	Refresh_tree_ref() // 更新视图
+	Get(string) string 
+	Set(string,string)
 	delete()
-	follow()
-	len()
+	//follow()
+	Len() int
+	Address() int64
 	_follow()
 }

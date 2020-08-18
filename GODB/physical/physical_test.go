@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestFunc(t *testing.T) {
+func TestWR(t *testing.T) {
 	//t.Skip()
 	//t.Errorf(os.Getwd())
 	addr := "test1.txt"
