@@ -30,10 +30,40 @@ func TestBTree(t *testing.T){
 	t.Log("Build Tree Succeed!")
 
 	// 明明在内存里为啥压查文件
-	//tmp,_:= btree._follow(&btree._tree_ref) // failed!
-	//tnode:=tmp.(BinaryNode)
+	// 这里要伪实现一个 logi_impl set
+
 	btree._tree_ref = *btree.Insert(  &NULLNODE, "0", ValueRef{"gigikj",-1})
+	btree.Commit()
 
 	t.Log("Insert Tree Succeed!")
+
+}
+
+
+
+func TestBTreeRef(t *testing.T){
+
+	var (
+		valref= ValueRef{"aaaaa",-1}
+	)
+
+	var node_core *BinaryNode = NewNode( &NULLNODEREF,
+		&NULLNODEREF,
+		valref,
+		"key",
+		1)
+
+	var noderef *BinaryNodeRef = NewBNodeRef(0,*node_core)
+
+	if noderef.Address()!=0{
+		t.Errorf("Address failed!")
+	}
+
+	if noderef.IsNull(){
+		t.Errorf("IsNull failed!")
+	}
+
+	tmp_bytes:=noderef.Ref2bytes(node_core)
+	t.Log(tmp_bytes)
 
 }

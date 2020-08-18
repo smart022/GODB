@@ -204,7 +204,8 @@ func (t *BinaryTree) _follow(ref lg.Ref) (interface{},error) {
 
 // 源码是 logicalbase的逻辑， 这里 tree和 logi_impl都要实现， 然后实际是 logi_impl调 tree
 func (t *BinaryTree) Commit(){
-	t._tree_ref.Store(t.storage)
+	err:=t._tree_ref.Store(t.storage)
+	check(err)
 	t.storage.Commit_root_address( t._tree_ref.Address() )
 }
 

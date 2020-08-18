@@ -37,7 +37,9 @@ func (t *BinaryNodeRef) Address() int64 {
 }
 
 func (t *BinaryNodeRef) IsNull() bool {
-	return t._address == lg.INIT_ADDR
+	// 要考虑一下
+	return t._referent.IsNull()
+	//return t._address == lg.INIT_ADDR
 }
 
 func (t *BinaryNodeRef) Length() (int,error) {
